@@ -66,7 +66,7 @@ export default function Page(): JSX.Element {
     if (lastJsonMessage === null) {
       return
     }
-    setTemperature(lastJsonMessage.battery_temperature)
+    setTemperature(parseFloat(lastJsonMessage.battery_temperature.toFixed(3)))
   }, [lastJsonMessage])
 
   /**
