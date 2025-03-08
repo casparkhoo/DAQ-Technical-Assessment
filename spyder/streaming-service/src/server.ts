@@ -47,7 +47,7 @@ tcpServer.on("connection", (socket) => {
         // Log warning if threshold is exceeded
         if (outOfRangeTimestamps.length > ALERT_THRESHOLD) {
           console.warn(
-            `[ALERT] Battery temperature out of range more than ${ALERT_THRESHOLD} times in ${TIME_WINDOW / 1000}s! Last timestamp: ${now}`
+            `Battery temperature out of range more than ${ALERT_THRESHOLD} times in ${TIME_WINDOW / 1000}s!`
           );
         }
 
@@ -58,7 +58,6 @@ tcpServer.on("connection", (socket) => {
       websocketServer.clients.forEach(function each(client) {
         if (client.readyState === WebSocket.OPEN) {
           client.send(message);
-          // update status from green to yellow to red here?
         }
       });
     } catch (error) {

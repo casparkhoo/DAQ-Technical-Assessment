@@ -14,6 +14,9 @@ module.exports = {
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
+			safe: "hsl(var(--safe))", // Green
+			warning: "hsl(var(--warning))", // Yellow
+			danger: "hsl(var(--danger))", // Red
   			card: {
   				DEFAULT: 'hsl(var(--card))',
   				foreground: 'hsl(var(--card-foreground))'

@@ -1,5 +1,5 @@
 "use client"
-
+import { Sun } from "lucide-react";
 import { useState, useEffect } from "react"
 import useWebSocket, { ReadyState } from "react-use-websocket"
 import { useTheme } from "next-themes"
@@ -25,7 +25,7 @@ interface VehicleData {
  * @returns {JSX.Element} The rendered page component.
  */
 export default function Page(): JSX.Element {
-  const { setTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
   const [temperature, setTemperature] = useState<any>(0)
   const [connectionStatus, setConnectionStatus] = useState<string>("Disconnected")
   const { lastJsonMessage, readyState }: { lastJsonMessage: VehicleData | null; readyState: ReadyState } = useWebSocket(
@@ -56,7 +56,7 @@ export default function Page(): JSX.Element {
         setConnectionStatus("Disconnected")
         break
     }
-  }, [])
+  }, [readyState]);
 
   /**
    * Effect hook to handle incoming WebSocket messages.
@@ -69,12 +69,12 @@ export default function Page(): JSX.Element {
     setTemperature(parseFloat(lastJsonMessage.battery_temperature.toFixed(3)))
   }, [lastJsonMessage])
 
-  /**
-   * Effect hook to set the theme to dark mode.
-   */
-  useEffect(() => {
-    setTheme("dark")
-  }, [setTheme])
+  // /**
+  //  * Effect hook to set the theme to dark mode.
+  //  */
+  // useEffect(() => {
+  //   setTheme("light")
+  // }, [theme, setTheme]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -85,6 +85,10 @@ export default function Page(): JSX.Element {
           alt="Redback Racing Logo"
         />
         <h1 className="text-foreground text-xl font-semibold">DAQ Technical Assessment</h1>
+
+        <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="ml-auto px-4 py-2 border rounded-lg bg-gray-200 text-black">
+          <Sun className="h-5 w-5 mr-2" />
+        </button>
         <Badge variant={connectionStatus === "Connected" ? "success" : "destructive"} className="ml-auto">
           {connectionStatus}
         </Badge>
