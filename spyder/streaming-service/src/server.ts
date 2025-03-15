@@ -11,9 +11,7 @@ const WS_PORT = 8080;
 const tcpServer = net.createServer();
 const websocketServer = new WebSocketServer({ port: WS_PORT });
 
-
 const SAFE_TEMP_RANGE = { min: 20, max: 80 };
-const WARNING_RANGE = { min: 25, max: 75 };
 const ALERT_THRESHOLD = 3;
 const TIME_WINDOW = 5000;
 let outOfRangeTimestamps: number[] = [];
@@ -26,17 +24,16 @@ tcpServer.on("connection", (socket) => {
 
     try {
       const data: VehicleData = JSON.parse(message);
-      if (typeof data.battery_temperature !== "number" ||
-      isNaN(data.battery_temperature)) {
+      if (typeof data.battery_temperature !== "number" || isNaN(data.battery_temperature)) {
         console.log(`Invalid data received: ${message}`);
         return;
       }
 
+      const now = Date.now();
       if (
         data.battery_temperature < SAFE_TEMP_RANGE.min ||
         data.battery_temperature > SAFE_TEMP_RANGE.max
       ) {
-        const now = Date.now();
         outOfRangeTimestamps.push(now);
 
         // Remove timestamps older than TIME_WINDOW
@@ -44,22 +41,42 @@ tcpServer.on("connection", (socket) => {
           (t) => now - t <= TIME_WINDOW
         );
 
+        // Check if the alert threshold is exceeded
+        const isWarning = outOfRangeTimestamps.length > ALERT_THRESHOLD;
+
         // Log warning if threshold is exceeded
-        if (outOfRangeTimestamps.length > ALERT_THRESHOLD) {
+        if (isWarning) {
           console.warn(
             `Battery temperature out of range more than ${ALERT_THRESHOLD} times in ${TIME_WINDOW / 1000}s!`
           );
         }
 
-        console.log(`Received: ${message}`);
-      }
+        // Send JSON over WS to frontend clients with warning status
+        const responseData = {
+          ...data,
+          warning: isWarning, // Add warning status to the message
+        };
 
-      // Send JSON over WS to frontend clients
-      websocketServer.clients.forEach(function each(client) {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(message);
-        }
-      });
+        websocketServer.clients.forEach(function each(client) {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify(responseData)); // Send the updated message
+          }
+        });
+
+        console.log(`Received: ${message}`);
+      } else {
+        // If the temperature is within range, send the data without warning
+        const responseData = {
+          ...data,
+          warning: false, // No warning if within range
+        };
+
+        websocketServer.clients.forEach(function each(client) {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify(responseData)); // Send the updated message
+          }
+        });
+      }
     } catch (error) {
       console.log(`Failed to parse JSON: ${message}`);
     }
